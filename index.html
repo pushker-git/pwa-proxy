@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Open via Proxy</title>
+
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#111827">
+
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #111827;
+            color: #fff;
+            padding: 20px;
+        }
+
+        input,
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+        }
+
+        button {
+            background: #3b82f6;
+            color: white;
+            cursor: pointer;
+        }
+
+        small {
+            color: #9ca3af;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>🔁 Open URL via Proxy</h2>
+
+    <label>
+        Proxy base URL
+        <input id="proxy" />
+    </label>
+
+    <label>
+        Target URL
+        <input id="url" placeholder="Paste or share URL" />
+    </label>
+
+    <button onclick="openViaProxy()">Open</button>
+    <small>Proxy is saved automatically</small>
+
+    <script>
+        /** 🔧 CHANGE THIS ONCE **/
+        const DEFAULT_PROXY = "https://freedium-mirror.cfd";
+
+        const proxyInput = document.getElementById("proxy");
+        const urlInput = document.getElementById("url");
+
+        // Load proxy: saved → default
+        proxyInput.value =
+            localStorage.getItem("proxyBase") || DEFAULT_PROXY;
+
+        // Save proxy automatically on change
+        proxyInput.addEventListener("change", () => {
+            localStorage.setItem(
+                "proxyBase",
+                proxyInput.value.trim().replace(/\/$/, "")
+            );
+        });
+
+        // Handle shared URL (Android Share Target)
+        const params = new URLSearchParams(window.location.search);
+        const sharedUrl =
+            params.get("url") ||
+            params.get("text");
+
+        if (sharedUrl) {
+            urlInput.value = sharedUrl;
+            setTimeout(openViaProxy, 300); // auto-open 🔥
+        }
+
+        function openViaProxy() {
+            const proxy = proxyInput.value.trim().replace(/\/$/, "");
+            const url = urlInput.value.trim();
+
+            if (!proxy.startsWith("http")) {
+                alert("Invalid proxy URL");
+                return;
+            }
+
+            if (!url.startsWith("http")) {
+                alert("Invalid target URL");
+                return;
+            }
+
+            localStorage.setItem("proxyBase", proxy);
+
+            const finalUrl = `${proxy}/${url}`;
+            window.location.href = finalUrl;
+        }
+
+        // Register service worker
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("service-worker.js");
+        }
+    </script>
+
+</body>
+
+</html>
